@@ -1,0 +1,1 @@
+gcc -pthread -I/home/madhu/ovs/include -I/home/madhu/ovs -o main main.c -L. -lopenvswitch -lofproto -lrt -lm -w
