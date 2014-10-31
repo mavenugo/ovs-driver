@@ -3,12 +3,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "lib/vconn.h"
-#include "lib/ofp-msgs.h"
-#include "lib/ofpbuf.h"
-#include "lib/ofp-util.h"
-#include "include/openflow/openflow-common.h"
-#include "include/ovs-of-driver.h"
+#include "third-party/ovs/lib/vconn.h"
+#include "third-party/ovs/lib/ofp-msgs.h"
+#include "third-party/ovs/lib/ofpbuf.h"
+#include "third-party/ovs/lib/ofp-util.h"
+#include "third-party/ovs/include/openflow/openflow-common.h"
+#include "sp-ovs-driver.h"
 
 #define IPTOS_PREC_INTERNETCONTROL 0xc0
 #define DSCP_DEFAULT (IPTOS_PREC_INTERNETCONTROL >> 2)
@@ -222,7 +222,6 @@ add_flow(int argc, char *argv[])
     ofctl_flow_mod(argc, argv, OFPFC_ADD);
 }
 
-/*
 void
 execute_command(int argc, char *argv[]) {
     int error = 0;
@@ -243,4 +242,3 @@ execute_command(int argc, char *argv[]) {
 void main (int argc, char *argv[]) {
     execute_command(argc - 1, argv + 1);
 }
-*/
