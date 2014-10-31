@@ -8,7 +8,7 @@
 #include "third-party/ovs/lib/ofpbuf.h"
 #include "third-party/ovs/lib/ofp-util.h"
 #include "third-party/ovs/include/openflow/openflow-common.h"
-#include "sp-ovs-driver.h"
+#include "include/ovs-driver.h"
 
 #define IPTOS_PREC_INTERNETCONTROL 0xc0
 #define DSCP_DEFAULT (IPTOS_PREC_INTERNETCONTROL >> 2)
@@ -239,6 +239,8 @@ execute_command(int argc, char *argv[]) {
     if (error) exit(1);
 }
 
+/*
 void main (int argc, char *argv[]) {
     execute_command(argc - 1, argv + 1);
 }
+*/
