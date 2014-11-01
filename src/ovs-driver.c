@@ -25,13 +25,11 @@ int open_vconn_socket(const char *name, struct vconn **vconnp)
     bridge_path = xasprintf("%s/%s.%s", ovs_rundir(), name, suffix);
     vconn_name = xasprintf("unix:%s", bridge_path);
 
-    printf("VConn : %s", vconn_name);
     error = vconn_open(vconn_name, get_allowed_ofp_versions(), DSCP_DEFAULT,
                        vconnp);
     if (error && error != ENOENT) {
         printf("%s: failed to open socket (%s)", name, ovs_strerror(error));
     }
-    vconn_set_recv_any_version(*vconnp);
     error = vconn_connect_block(*vconnp);
     if (error) {
         printf("%s: failed to connect to socket (%s)", name, ovs_strerror(error));
@@ -42,7 +40,7 @@ int open_vconn_socket(const char *name, struct vconn **vconnp)
     return error;
 }
 
-char* show_ofctl (char* vconn_name) {
+char* ovs_get_features (char* vconn_name) {
     enum ofp_version version;
     struct vconn *vconn;
     struct ofpbuf *request;
@@ -152,6 +150,8 @@ open_vconn_for_flow_mod(const char *remote, struct vconn **vconnp,
     enum ofputil_protocol cur_protocol;
     char *usable_s;
     int i;
+    int ofp_version;
+    int error;
 
     if (!(usable_protocols & allowed_protocols)) {
         char *allowed_s = ofputil_protocols_to_string(allowed_protocols);
@@ -161,7 +161,13 @@ open_vconn_for_flow_mod(const char *remote, struct vconn **vconnp,
     }
 
     /* If the initial flow format is allowed and usable, keep it. */
-    cur_protocol = open_vconn_socket(remote, vconnp);
+    error = open_vconn_socket(remote, vconnp);
+    if (error) {
+        printf("ERROR :-( %d", error);
+    }
+
+    ofp_version = vconn_get_version(*vconnp);
+    cur_protocol = ofputil_protocol_from_ofp_version(ofp_version);
     if (usable_protocols & allowed_protocols & cur_protocol) {
         return cur_protocol;
     }
@@ -183,7 +189,7 @@ open_vconn_for_flow_mod(const char *remote, struct vconn **vconnp,
 }
 
 void
-ofctl_flow_mod__(const char *remote, struct ofputil_flow_mod *fms,
+ovs_flow_mod__(const char *remote, struct ofputil_flow_mod *fms,
                  size_t n_fms, enum ofputil_protocol usable_protocols)
 {
     enum ofputil_protocol protocol;
@@ -202,24 +208,36 @@ ofctl_flow_mod__(const char *remote, struct ofputil_flow_mod *fms,
 }
 
 void
-ofctl_flow_mod(int argc, char *argv[], uint16_t command)
+ovs_flow_mod(char* bridge_name, char *flow, uint16_t command_type)
 {
     struct ofputil_flow_mod fm;
     char *error;
     enum ofputil_protocol usable_protocols;
 
-    error = parse_ofp_flow_mod_str(&fm, argc > 2 ? argv[2] : "", command,
+    error = parse_ofp_flow_mod_str(&fm, flow, command_type,
                                    &usable_protocols);
     if (error) {
         printf("%s", error);
     }
-    ofctl_flow_mod__(argv[1], &fm, 1, usable_protocols);
+    ovs_flow_mod__(bridge_name, &fm, 1, usable_protocols);
 }
 
 void
-add_flow(int argc, char *argv[])
+ovs_del_flow(char* bridge_name, char *flow)
 {
-    ofctl_flow_mod(argc, argv, OFPFC_ADD);
+    ovs_flow_mod(bridge_name, flow, OFPFC_DELETE_STRICT);
+}
+
+void
+ovs_mod_flow(char* bridge_name, char *flow)
+{
+    ovs_flow_mod(bridge_name, flow, OFPFC_MODIFY_STRICT);
+}
+
+void
+ovs_add_flow(char* bridge_name, char *flow)
+{
+    ovs_flow_mod(bridge_name, flow, OFPFC_ADD);
 }
 
 void
@@ -228,7 +246,11 @@ execute_command(int argc, char *argv[]) {
     if (!strcmp("show", argv[0])) {
         error = show(argv);
     } else if (!strcmp("add", argv[0])) {
-        add_flow(argc, argv);
+        ovs_add_flow(argv[1], argv[2]);
+    } else if (!strcmp("del", argv[0])) {
+        ovs_del_flow(argv[1], argv[2]);
+    } else if (!strcmp("mod", argv[0])) {
+        ovs_mod_flow(argv[1], argv[2]);
     }
 
     printf("error = %d", error);
@@ -239,8 +261,6 @@ execute_command(int argc, char *argv[]) {
     if (error) exit(1);
 }
 
-/*
 void main (int argc, char *argv[]) {
     execute_command(argc - 1, argv + 1);
 }
-*/
