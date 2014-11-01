@@ -260,7 +260,3 @@ execute_command(int argc, char *argv[]) {
     printf("\n");
     if (error) exit(1);
 }
-
-void main (int argc, char *argv[]) {
-    execute_command(argc - 1, argv + 1);
-}
