@@ -7,6 +7,7 @@ Please follow these steps to successfully clone and build the ovs-driver library
 
 1. git clone --recursive https://github.com/mavenugo/ovs-driver
    * This will also pull the ovs sub-module into third-party/
+   * If the cloning is done without the --recursive, you can use this command *git submodule update --init --recursive* to pull and update the submodule
 
 2. Install all the build tools pre-req as specified in target-specific ovs INSTALL documents.
 
